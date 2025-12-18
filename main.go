@@ -1,9 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
+
+type ConfigError struct {
+	ErrorField string
+}
+
+func (e ConfigError) Error() string {
+	return fmt.Sprint("Numbers cannot be negative or 0: ", e.ErrorField)
+}
 
 type LeakyBucket struct {
 	capacity   float64
@@ -13,12 +22,16 @@ type LeakyBucket struct {
 	mu         sync.Mutex
 }
 
-func NewLeakyBucket(capacity float64, leakRate float64) *LeakyBucket {
+func NewLeakyBucket(capacity float64, leakRate float64) (*LeakyBucket, error) {
+	if capacity <= 0 || leakRate <= 0 {
+
+		return nil, ConfigError{ErrorField: "capacity"}
+	}
 	return &LeakyBucket{
 		capacity: capacity,
 		leakRate: leakRate,
 		lastTime: time.Now(),
-	}
+	}, nil
 }
 
 func (c *LeakyBucket) leak() {
